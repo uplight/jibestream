@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  width="100%" height="100%" minWidth="955" minHeight="600" horizontalCenter="0" creationComplete="application1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.DragManager;
+			
+			import spark.components.Image;
+			import spark.events.IndexChangeEvent;
+			
+			import vos.VoIcon;
+			import vos.VoMap;
+			
+			
+			[Bindable]
+			public var myiconsAr:ArrayList
+			
+			protected var library:Object;
+			
+			
+			private var onLegendsRes:Responder = new Responder(onLegendsResult,onFault);
+			private var onSaveLegendsRes:Responder = new Responder(onSaveLegendsResult,onFault);
+			private var onLegendsBankRes:Responder = new Responder(onLegendsBankResult,onFault);
+			
+			private var _selectedItem:VoIcon;
+			
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void{
+				trace("legends mapper created");
+				this.addEventListener(Event.ADDED_TO_STAGE,onAddedToStage);
+				this.addEventListener(Event.REMOVED_FROM_STAGE,onRemovedToStage);
+				Registry.getInstance.dispatcherGlobal.addEventListener(Registry.GETNEWMAP,onGetNewMap);
+				Registry.getInstance.dispatcherGlobal.addEventListener(Registry.SAVECHANGESONSERVER,onSaveMapOnServer);
+				Registry.getInstance.connector.call("MapBuilder.getIconsList",onLegendsBankRes,Registry.getInstance.screenid);
+			}
+			
+			protected function onSaveMapOnServer(event:Event):void{			
+				var strXML:String=createIconsXML();
+				trace("MapBuilder.saveIconsOf:  "+  voCurrent.xml+ "    "+strXML);
+				Registry.getInstance.connector.call("MapBuilder.saveIconsOf",onSaveLegendsRes,voCurrent.xml,strXML,Registry.getInstance.screenid);				
+			}
+			
+			private function createIconsXML():String{
+				var n:int=this.container.numChildren;
+				var xml:XML= <body/>;
+				for(var i:int=0;i<n;i++){
+					var img:Image = this.container.getChildAt(i) as Image;
+					if(img){
+						var node:XML=<img/>;
+						node.@dbid=img.name;
+						node.@x=img.x+10
+						node.@y=img.y+10;
+						node.@src=String(img.source);
+						xml.appendChild(node);
+					}
+						
+				}
+				return xml.toXMLString();;
+			}
+			protected function onAddedToStage(event:Event):void	{
+				
+				
+				
+			}
+			
+			protected function onRemovedToStage(event:Event):void{
+				trace("Mapper removed from stage");
+				
+			}
+			private var voCurrent:VoMap;
+			
+			
+			protected function legendPanel_changeHandler(event:IndexChangeEvent):void{
+				this._selectedItem =legendPanel.selectedItem as VoIcon;
+				//trace(this._selectedItem.dbid);
+				
+			}
+			private function onLegendsBankResult(obj:Object):void{
+				trace("onLegendsBankResult  ");
+				this.library= new Object;
+				
+				var xml:XML= new XML(obj);
+				//trace(xml);
+				var arl:ArrayList= new ArrayList
+					for each(var node:XML in xml.children()){
+						var icon:VoIcon= new VoIcon(node.attribute('dbid'),node.attribute('src'))
+						arl.addItem(icon);
+						this.library[icon.label]=icon.icon;
+					}
+			//	trace(xml);
+				myiconsAr=arl;
+				
+			}
+			
+			private var _xml:XML;
+			///////////////////////////////////Getting result from Server///////////////////////////////////
+			protected function onGetNewMap(event:Event):void{
+				var vo:VoMap =Registry.getInstance.currentMap
+				
+				trace("calling MapBuilder.getIconsOf "+ vo.xml+"  "+Registry.getInstance.screenid);
+				
+				Registry.getInstance.connector.call("MapBuilder.getIconsOf",onLegendsRes,vo.xml,Registry.getInstance.screenid);
+			ldrFloor.source="data/maps/"+vo.img;
+				voCurrent=vo;
+			}
+			private function onLegendsResult(obj:Object):void{
+				var xml:XML= new XML(obj);
+				trace("onLegendsResult  "+xml) 
+				if(xml)	populateData(xml);
+			}
+			private function populateData(xml:XML):void{
+				this._xml=xml;
+				this.container.removeAllElements();
+				this.container.addElement(ldrFloor);
+				for each(var node:XML in xml.children()){
+					var img:spark.components.Image= new spark.components.Image();
+					img.x=node.attribute('x');
+					img.y=node.attribute('y');
+					
+					img.source = String(node.attribute('src')); //  this.library[node.attribute('dbid')];//   getUrlByName(node.attribute('dbid'));
+					img.name=node.attribute('dbid');
+					img.addEventListener(MouseEvent.MOUSE_DOWN, imgMouseDown);
+					img.addEventListener(MouseEvent.MOUSE_UP, imgMouseUp);
+					trace(img.source);
+					this.container.addElement(img);
+				}
+				
+				
+			}
+			protected function getUrlByName(str:String):String{
+				var n:int=myiconsAr.length;
+				for(var i:int;i<n;i++){
+					if(myiconsAr.getItemAt(i).dbid==str) break;
+				}
+				return myiconsAr.getItemAt(i).src;
+				
+			}
+			private function onSaveLegendsResult(obj:Object):void{
+				Alert.show("Icons saved on server "+obj.toString());
+				Registry.getInstance.hasChanges=false;
+				
+			}
+			
+			private function onFault(obj:Object):void	{
+				trace("Legend Mapper onFault  :"+obj);
+				
+			}
+			protected function bordercontainer1_dragCompleteHandler(event:DragEvent):void{
+				trace("drag stop");
+				
+			}
+			
+			protected function container_dragDropHandler(event:DragEvent):void	{
+				/* trace("Drag drop:"+event.dragSource);
+				event.draggedItem
+				var list:List=event.dragInitiator as List;
+				
+				trace("Drag drop:"+event.dragInitiator); */
+				
+				
+				//view.addImage(this._selectedItem.src,this._selectedItem.dbid, container.mouseX-20,container.mouseY-20);			
+				//view.resetFilter();
+				if(legendPanel.selectedItem==-1) return;
+				var vo:VoIcon = legendPanel.selectedItem;
+				trace("Drag drop:"+event.dragSource)
+				trace(vo.label);
+				
+				
+				var img:Image = new Image();
+				img.source=vo.icon
+				img.name=vo.label
+				img.x=container.mouseX-10;
+				img.y=container.mouseY-10;
+				img.addEventListener(MouseEvent.MOUSE_DOWN, imgMouseDown);
+				img.addEventListener(MouseEvent.MOUSE_UP, imgMouseUp);
+				
+				container.addElement(img);
+				Registry.getInstance.hasChanges=true;
+
+			}
+			
+			protected function container_dragEnterHandler(event:DragEvent):void		{
+				trace("container_dragEnterHandler");
+				DragManager.acceptDragDrop(container);   
+			}
+				
+			private function imgMouseDown(e:MouseEvent):void{	
+				//resetFilter();
+				
+				//_selectedItem=e.currentTarget as Image;
+				//if(!_selectedItem) return;
+				
+				
+				//_selectedItem.filters = [new GlowFilter(0xFF0000)];
+				e.currentTarget.startDrag();
+				
+				
+			}
+			private function imgMouseUp(e:MouseEvent):void{
+				Registry.getInstance.hasChanges=true;
+				e.currentTarget.stopDrag();
+				
+			}
+			
+			
+			
+			
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+		
+	
+<!--	<s:BorderContainer id="container" horizontalCenter="0"   width="1228" height="650" backgroundColor="#CCCCCC" cornerRadius="10" dropShadowVisible="true"
+			 dragComplete="bordercontainer1_dragCompleteHandler(event)"
+			 dragDrop="container_dragDropHandler(event)"
+			 dragEnter="container_dragEnterHandler(event)"
+			 >
+		<s:SWFLoader id="ldrFloor" scaleContent="false"/>
+				
+	</s:BorderContainer>-->
+	<s:BorderContainer id="border"  horizontalCenter="0" width="1228" height="650" backgroundColor="#CCCCCC" cornerRadius="10"  dropShadowVisible="true"    >
+		<s:Group  id="container" horizontalCenter="0"
+				  dragComplete="bordercontainer1_dragCompleteHandler(event)"
+				  dragDrop="container_dragDropHandler(event)"
+				  dragEnter="container_dragEnterHandler(event)"
+				  >
+			<s:SWFLoader id="ldrFloor" scaleContent="false" x="0" y="0"/>
+		</s:Group>
+	
+		
+	</s:BorderContainer>
+	
+	<!--<s:List id="legendPanel" width="85" height="759"
+			change="legendPanel_changeHandler(event)"
+			dragEnabled="true"
+			dragMoveEnabled="false" 	
+			dataProvider="{myiconsAr}"  >
+		
+		<s:itemRenderer >
+			<fx:Component>
+				<s:ItemRenderer >
+					<s:layout>
+						<s:VerticalLayout horizontalAlign="center"/>
+					</s:layout>
+					<s:Image source="{data.src}" />
+					<s:Label text="{data.dbid}" />
+				</s:ItemRenderer>						
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>-->
+	<s:List id="legendPanel" left="10" width="85" height="650"
+			change="legendPanel_changeHandler(event)" contentBackgroundColor="#CCCCCC"
+			dataProvider="{myiconsAr}" dragEnabled="true" itemRenderer="comps.IRLegend"
+			skinClass="spark.skins.spark.ListSkin">
+		
+	<!--	<s:itemRenderer >
+			<fx:Component>
+				<s:ItemRenderer >
+					<s:layout>
+						<s:VerticalLayout horizontalAlign="center"/>
+					</s:layout>
+					<s:Image source="{data.src}" />
+					<s:Label text="{data.dbid}" />
+				</s:ItemRenderer>						
+			</fx:Component>
+		</s:itemRenderer>-->
+	</s:List>
+</s:Module>

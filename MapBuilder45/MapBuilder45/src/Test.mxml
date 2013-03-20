@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" creationComplete="application1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			
+			
+				
+			protected var txtEditor:TextField;
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void{
+				
+				var txt:TextField= new TextField
+					txt.width=this.width
+					txt.height=this.height;
+					txt.border=true;
+				
+				container.addChild(txt);
+				txtEditor=txt;
+				
+				var ldr:URLLoader = new URLLoader(new URLRequest("http://192.168.2.20/Holland/xml/B_3_3_1.xml"));
+				ldr.addEventListener(Event.COMPLETE,onCOMPLETE);
+			}
+			
+			protected function onCOMPLETE(event:Event):void
+			{
+				var xml:XML = new XML(event.target.data);
+				
+				txtEditor.htmlText=xml.text_block.push_text[2]
+					
+				
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:SpriteVisualElement id="container" />
+</s:Application>

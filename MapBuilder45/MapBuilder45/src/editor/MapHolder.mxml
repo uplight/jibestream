@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:comps="comps.*"
+				   width="1228" height="650" backgroundColor="#CCCCCC" cornerRadius="10"  dropShadowVisible="true" 
+				   creationComplete="bordercontainer1_creationCompleteHandler(event)"
+				   
+				  xmlns:editor="editor.*">
+	<fx:Script>
+		<![CDATA[
+			import editor.path.PathEditor;
+			
+			import mediators.MapHolderMediator;
+			
+			import mx.events.FlexEvent;
+			
+		//	import org.puremvc.as3.patterns.mediator.Mediator;
+			
+			import vos.VoMap;
+			
+			private var loader:Loader = new Loader();
+			private var request:URLRequest = new URLRequest();
+			private var tools:DisplayObject;
+			private var btnOver:SimpleButton;
+			
+			private const NAME:String="MapHolder"
+			
+			public var pathEditor:PathEditor = new PathEditor();
+			
+			private var respGetMap:Responder = new Responder(respGetMapResult,onFault);
+			private var respSaveMap:Responder = new Responder(respSaveMapResult,onFault);
+		
+			
+			protected function bordercontainer1_creationCompleteHandler(event:FlexEvent):void	{
+				
+				container.addChild(loader);
+				container.addChild(pathEditor);
+				pathEditor.setRoot(this)
+				pathEditor.setIndicator(this.indicator);
+				
+				var sprt:Sprite = new Sprite();
+				//this.zoommove.addEventListener(DataEvent.DATA,onZoomMove);
+				Registry.getInstance.dispatcherGlobal.addEventListener(Registry.GETNEWMAP,onGetNewMap);
+				Registry.getInstance.dispatcherGlobal.addEventListener(Registry.SAVECHANGESONSERVER,onSaveNewMap);
+				
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE,onNewMapLoaded);
+			}
+			protected function onNewMapLoaded(event:Event):void	{
+				trace(loader.content.width);
+			//this.container.width=loader.content.width;
+			this.container.x=(this.width-loader.content.width)/2
+			//	trace(this.container.height);
+				
+			}
+			
+			protected function onGetNewMap(event:Event):void{
+				Registry.getInstance.connector.call("MapBuilder.getMap",this.respGetMap, Registry.getInstance.currentMap.xml);
+				loadImage(Registry.getInstance.currentMap.img);
+				}
+			
+			protected function onSaveNewMap(event:Event):void{
+						
+				var str:String = this.pathEditor.getMapAsString();
+				trace("MapBuilder.saveMap: "+ Registry.getInstance.currentMap.xml)
+				Registry.getInstance.connector.call("MapBuilder.saveMap",this.respSaveMap, Registry.getInstance.currentMap.xml,str);
+			}
+			private function respSaveMapResult(evt:Object):void{
+				Alert.show("Map was saved with "+evt.toString());
+				Registry.getInstance.hasChanges=false;
+			}
+					
+			
+			private function respGetMapResult(obj:Object):void	{
+				//trace(NAME+"   respGetMapResult:"+obj);
+				//this.strCurrentMap= this.strNewMap;
+				pathEditor.buildMap(new XML(obj));
+				//haveMap=true;
+				
+			}
+			
+			private function onFault(res:Object):void{
+				trace(NAME+"   Fault:"+  res.description);
+				
+			}
+			
+			private function loadImage(str:String):void{
+				//trace(NAME+" loadImage  "+str)
+				loader.unloadAndStop();
+				request.url="data/maps/"+str;
+				loader.load(request);
+			}
+			
+						
+			public function makeMovable():Boolean{
+				if(btnOver) {
+					container.removeChild(btnOver);
+					btnOver.removeEventListener(MouseEvent.MOUSE_DOWN,containerMOUSEDOWN);
+					btnOver.removeEventListener(MouseEvent.MOUSE_UP,containerMOUSEUP);
+					btnOver.removeEventListener(MouseEvent.MOUSE_OUT,containerMOUSEUP);
+					btnOver=null;
+				}else{
+					this.btnOver= new SimpleButton(null,null,null,this);
+					btnOver.addEventListener(MouseEvent.MOUSE_DOWN,containerMOUSEDOWN);
+					btnOver.addEventListener(MouseEvent.MOUSE_UP,containerMOUSEUP);
+					btnOver.addEventListener(MouseEvent.MOUSE_OUT,containerMOUSEUP);
+					this.container.addChild(btnOver);
+				}
+				return this.btnOver!=null;
+			}
+			
+			public function addContent(DO:DisplayObject):void{
+				trace(NAME+"   addContent   ");
+				container.removeChild(this.tools);
+			this.tools=container.addChild(DO);
+			}
+			
+			private function containerMOUSEDOWN(evt:MouseEvent):void{
+				container.startDrag();
+				
+			}
+			
+			protected function containerMOUSEUP(event:Event):void{
+				container.stopDrag();
+			}
+			
+			public function zoomOut():Number{
+				var sc:Number=container.scaleX*0.8;
+				if(sc<1.2 && sc>0.8) sc=1.0;
+				if(sc<0.5) sc=0.5;
+				container.scaleX= sc;
+				container.scaleY=sc;
+				return sc;
+			}
+			public function zoomIn():Number{
+				var sc:Number=container.scaleX*1.2;
+				if(sc<1.2 && sc>0.8)sc=1.0;
+				if(sc>6.0) sc=6.0
+				container.scaleX= sc;
+				container.scaleY = sc;
+				return sc;
+			}
+			
+			/* protected function onZoomMove(event:DataEvent):void{
+				//trace(NAME+" onZoomMove "+ event.data);
+				switch(event.data){
+					case "zoomp":
+						zoommove.myZoom(zoomIn());
+						break;
+					case "zoomm":
+						zoommove.myZoom(zoomOut());
+						break;
+					case "movet":
+						makeMovable();
+						break;
+				}
+				
+			} */
+			
+			protected function addedToDtage(event:Event):void	{
+				Alert.init(stage);
+				
+			}
+			
+		
+			
+			
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!--<s:BorderContainer id="mymask" width="100%" height="100%" >
+		
+	</s:BorderContainer>-->
+	
+	
+	<s:Group maskType="clip" >
+		<s:SpriteVisualElement  id="container" addedToStage="addedToDtage(event)" >
+			
+		</s:SpriteVisualElement>
+		<s:mask>
+			<s:Group>
+				<s:Rect x="5" y="5" width="1218" height="640" >
+					<s:fill>
+						<s:SolidColor/>
+					</s:fill>
+				</s:Rect>
+			</s:Group>
+		</s:mask>
+	</s:Group>
+	
+	<!--<editor:ZoomInMove id="zoommove" x="4" y="-6">
+	</editor:ZoomInMove>-->
+	
+	<s:Label id="indicator" x="41" y="1" text=""/>
+	
+</s:BorderContainer>

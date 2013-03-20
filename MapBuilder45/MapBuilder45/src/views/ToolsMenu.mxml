@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   width="35" height="800" backgroundColor="#EAE6E6" cornerRadius="5"
+				   creationComplete="bordercontainer1_creationCompleteHandler(event)"
+				   dropShadowVisible="true">
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center" paddingTop="10"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import mediators.ToolsMenuMediator;
+			
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			
+			private var mediator:ToolsMenuMediator
+			protected function bordercontainer1_creationCompleteHandler(event:FlexEvent):void
+			{
+				mediator = new ToolsMenuMediator(this);
+				
+			}
+			
+			public function addMenu(vis:IVisualElement):void{
+				this.removeAllElements();
+				this.addElement(vis);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+</s:BorderContainer>

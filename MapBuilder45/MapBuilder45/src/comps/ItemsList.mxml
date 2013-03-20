@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="160" height="500" creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mediators.ItemsListMediator;
+			
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			
+			
+			
+			import spark.events.IndexChangeEvent;
+			
+			
+			public var mediator:ItemsListMediator
+			
+			[Bindable] private var arlItems:ArrayList
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void	{
+				
+				
+			}
+			public function setData(arl:ArrayList):void{
+				this.arlItems = arl;
+			}
+			
+			protected function list1_changeHandler(event:IndexChangeEvent):void	{
+				mediator.sendNotification(ItemsListMediator.CHANGE,event.newIndex);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:List x="10" y="33" width="140" height="457" dataProvider="{arlItems}" change="list1_changeHandler(event)"></s:List>
+	<s:Label x="0" width="160" height="20" backgroundColor="#595858" color="#FFFFFF"
+			 text="List" textAlign="center" verticalAlign="middle" />
+</s:Group>

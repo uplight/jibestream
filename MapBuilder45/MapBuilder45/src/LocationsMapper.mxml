@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  creationComplete="creationCompleteHandler(event)" width="100%" height="100%">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.serialization.json.JSON;
+			
+			import mx.collections.ArrayList;
+			import mx.core.IVisualElement;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.utils.ObjectUtil;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			
+			import vos.VoDataMap;
+			import vos.VoMap;
+			
+			
+			
+			private var getDataRes:Responder = new Responder(getDataResponder,onFault);
+			private var saveDataRes:Responder = new Responder(saveDataResponder,onFault);
+			private var getMapRes:Responder = new Responder(getMapResponder,onFault);
+				
+			
+			
+			[Bindable]private var arlRooms:ArrayList;
+			
+			
+			private var txtHint:TextField = new TextField;
+			private var doCurrent:DisplayObject
+			private var voCurrent:VoMap;
+			private var dots:Sprite
+			
+			
+			
+			protected function creationCompleteHandler(event:FlexEvent):void{
+				Registry.getInstance.connector.call("MapBuilder.getJsonData",getDataRes)
+				
+				Registry.getInstance.dispatcherGlobal.addEventListener(Registry.GETNEWMAP,onGetNewMap);
+				Registry.getInstance.dispatcherGlobal.addEventListener(Registry.SAVECHANGESONSERVER,onSaveMapOnServer);
+					
+				var sh:Shape = new Shape()
+				sh.graphics.beginFill(0x00FF00);
+				sh.graphics.drawCircle(0,0,3)
+				sh.graphics.endFill();
+				var comp:UIComponent = new UIComponent();
+				comp.addChild(sh);
+				this.grDot=	this.grContainer.addElement(comp);
+				imgDisk.addEventListener(MouseEvent.MOUSE_DOWN,startDragPin);
+				imgDisk.addEventListener(MouseEvent.MOUSE_UP,stopDragPin)
+				imgDisk.addEventListener(MouseEvent.MOUSE_OUT,stopDragPin)
+				//redpin.load('PinRed.swf');
+			}
+								
+			
+			
+			private function modefiyAr(obj:Object,ind:int,ar:Array):void{
+				ar[ind]=new VoDataMap(obj);
+			}
+			private function getDataResponder(obj:Object):void{
+				
+			var ar:Array= JSON.decode(obj as String) as Array;//     .parse(obj as String) as Array;
+			ar.forEach(modefiyAr);
+			arlRooms= new ArrayList(ar);
+			}
+			private function saveDataResponder(obj:Object):void{
+				Registry.getInstance.hasChanges=false;
+			}
+				
+			private function getMapResponder(obj:Object):void{
+				var xml:XML=new XML(obj as String)
+				//this.removeElement(this.mapHolder);
+				//this.mapHolder = new UIComponent()
+				//this.grContainer.addElement(this.mapHolder);	
+				mapHolder.graphics.clear();
+				while(mapHolder.numChildren>0) mapHolder.removeChildAt(0);
+				mapHolder.graphics.lineStyle(1);
+				
+				for each (var node:XML in xml.children()){
+					var dot:Sprite = getDot(node.@id,node.@x,node.@y);
+					dot.addEventListener(MouseEvent.MOUSE_OVER,dotMouseOver);
+					dot.addEventListener(MouseEvent.CLICK,dotMouseClick);
+					dot.addEventListener(MouseEvent.MOUSE_OUT,dotMouseOut);
+					mapHolder.addChild(dot);
+					var ar:Array= String(node.@join).split(",");
+					for each( var str:String in ar){
+						var DO:DisplayObject = mapHolder.getChildByName(str);
+						if(DO){
+							
+							mapHolder.graphics.moveTo(DO.x,DO.y);
+							mapHolder.graphics.lineTo(dot.x,dot.y);
+						}
+					}
+				}
+				
+			}
+			
+			protected function onGetNewMap(event:Event):void{
+				var vo:VoMap =Registry.getInstance.currentMap
+				trace("calling MapBuilder.getMap "+ vo.xml+"  "+Registry.getInstance.screenid);
+				Registry.getInstance.connector.call("MapBuilder.getMap",getMapRes,vo.xml);
+				
+				imagMap.source="data/maps/"+vo.img;
+				this.voCurrent=vo;
+			}
+			
+			protected function onSaveMapOnServer(event:Event):void	{
+				
+				var ar:Array= arlRooms.toArray();
+				ar.sortOn("label");
+				//Registry.getInstance.connector.call("MapBuilder.saveJsonData",saveDataRes,JSON.stringify(ar))
+				Registry.getInstance.connector.call("MapBuilder.saveJsonData",saveDataRes,JSON.encode(ar))
+			}
+			
+			/*
+			protected function filerefCOMPLETE(event:Event):void{
+			var xml:XML = new XML(fileref.data.toString())
+			
+			var arl:ArrayList = new ArrayList
+			trace("length: "+ xml.name());
+			for each(var node:XML in xml.Worksheet.Table.Row){
+			//	trace("node     \n "+node.Cell[1].Data);
+			arl.addItem({data:0,x:0,y:0,label:String((node.Cell[1].Data))});
+			}
+			this.arlRooms=arl;
+			//trace("hello");
+			
+			}
+			*/
+			
+			
+			
+			protected function startDragPin(event:MouseEvent):void	{
+				this.imgDisk.startDrag();
+				
+			}
+			
+			protected function stopDragPin(event:MouseEvent):void{
+				this.imgDisk.stopDrag();
+				//if(this.chkAnimate.selected)((redpin.content as DisplayObjectContainer).getChildAt(0) as MovieClip).gotoAndPlay(1);
+			}
+			
+			protected function btnRecord_clickHandler(event:MouseEvent):void{
+				if(lstUnits.selectedIndex<0) return
+				var obj:Object = arlRooms.getItemAt(lstUnits.selectedIndex);
+				obj.x=imgDisk.x+25;
+				obj.y=imgDisk.y+25;
+				//obj.data=currentImage;
+				obj.p=this.doCurrent.name;
+				arlRooms.setItemAt( obj,lstUnits.selectedIndex);
+				Registry.getInstance.hasChanges=true;
+			}
+			
+			private var grDot:IVisualElement
+			protected function lstUnits_changeHandler(event:IndexChangeEvent):void	{
+				
+				var obj:VoDataMap = arlRooms.getItemAt(lstUnits.selectedIndex) as VoDataMap;
+				if(obj==null) return;
+				//var obj:Object = arlRooms.getItemAt(lstUnits.selectedIndex);
+				
+				
+				
+				
+				if(obj.p){
+					
+					this.doCurrent = this.mapHolder.getChildByName(obj.p);
+				}
+				else this.doCurrent=null;
+				
+				if(this.doCurrent){
+					imgDisk.x=(obj.x||0)-25;//sp.x-40
+					imgDisk.y=(obj.y||0)-25;//sp.y-40
+					this.grDot.x=this.doCurrent.x;
+					this.grDot.y=this.doCurrent.y;
+					refreshLabel();
+				}else {
+					this.grDot.x=0;
+					this.grDot.y=0;
+					imgDisk.x=0;
+					imgDisk.y=0;
+					lblSelected.text="";
+				}
+				
+			}
+			
+			
+			private function getDot(str:String,x:int,y:int):Sprite{
+				var sp:Sprite = new Sprite();
+				sp.x=x;
+				sp.y=y;
+				sp.graphics.beginFill(0x000000);
+				sp.graphics.drawCircle(0,0,2);
+				sp.graphics.endFill();
+				//var txt:TextField = new TextField();
+				//txt
+				//txt.text=str;
+				//txt.y=-20;
+				//txt.x=-20;
+				sp.name=str;
+				//sp.addChild(txt)
+				return sp;
+				
+			}
+			
+			
+			
+			
+			
+			protected function dotMouseOver(event:MouseEvent):void{
+				var sp:Sprite = event.currentTarget as Sprite;
+				txtHint.text=sp.name;
+				txtHint.selectable=false
+				txtHint.height=20;
+				txtHint.x=sp.x;
+				txtHint.y=sp.y-25
+				//spCurrent=sp;
+				
+				this.myoverlay.addChild(txtHint)
+				
+			}
+			
+			protected function dotMouseOut(event:MouseEvent):void{
+				if(this.myoverlay.contains(txtHint))	this.myoverlay.removeChild(txtHint);
+				
+			}
+						
+						
+			protected function dotMouseClick(event:MouseEvent):void	{
+				
+				this.doCurrent = event.currentTarget as DisplayObject;
+				refreshLabel();
+				
+				
+			}
+			private function refreshLabel():void{
+				lblSelected.text=doCurrent.name+"  "+doCurrent.x+"  "+doCurrent.y;
+			}
+			
+			
+			
+			private function onFault(obj:Object):void{
+				Alert.show(" Error connection "+mx.utils.ObjectUtil.toString(obj));
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	
+	
+	<s:BorderContainer horizontalCenter="0" width="1228" height="650" backgroundColor="#CCCCCC" cornerRadius="10"  dropShadowVisible="true"  >
+	<s:Group id="grContainer" width="100%" height="100%">
+		<s:SWFLoader id="imagMap"  scaleContent="false" x="0" y="0"/>
+		<!--<s:SWFLoader id="redpin" x="0" y="0" width="70" height="120" scaleContent="false" source="PinRed.swf"/>-->
+		
+		<s:Image id="imgDisk" x="0" y="0" source="@Embed('../assets/DiskRed.png')"/>
+		<!--<s:Image id="redpin" x="0" y="0" width="50" height="50" source="Pin2.png" />-->
+		<mx:UIComponent id="mapHolder" x="0" y="0" />
+		<mx:UIComponent id="myoverlay" x="0" y="0" />
+	</s:Group>
+	</s:BorderContainer>
+	<s:BorderContainer backgroundColor="#CCCCCC" cornerRadius="5" dropShadowVisible="true" left="10">
+		<s:List id="lstUnits" y="57" width="120" height="578" change="lstUnits_changeHandler(event)"
+				contentBackgroundColor="#EEEEEE" dataProvider="{arlRooms}" dragEnabled="true" dropEnabled="true" dragMoveEnabled="true"
+				itemRenderer="comps.IRLocations"></s:List>
+		<s:Button  horizontalCenter="0" y="5" label="Record" click="btnRecord_clickHandler(event)"/>
+		<s:Label id="lblSelected" horizontalCenter="0" y="37" text="       "/>
+	</s:BorderContainer>
+</s:Application>

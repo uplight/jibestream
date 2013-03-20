@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="30" height="126" creationComplete="group1_creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.events.DataEvent;
+			
+			import mediators.ZoomMoveMediator;
+			
+			import mx.events.FlexEvent;
+			
+			//import org.puremvc.as3.patterns.mediator.Mediator;
+			protected function image_clickHandler(event:MouseEvent):void{
+				//trace("id:  "+event.currentTarget.id);
+							dispatchEvent(new DataEvent(DataEvent.DATA,false,false,event.currentTarget.id));
+			}
+			
+						
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				
+				
+			}
+			public function myZoom(num:Number):void{
+				this.lblZoom.text=int(num*100).toString();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:Image id="zoomp" x="0" y="10" source="@Embed('../assets/zoomp.png')" click="image_clickHandler(event)"/>
+	<s:Image id="zoomm"  x="0" y="48" source="@Embed('../assets/zoomm.png')" click="image_clickHandler(event)"/>
+	<s:Image id="movet" x="0" y="86" source="@Embed('../assets/movet.png')" click="image_clickHandler(event)"/>
+	<!--<s:Image id="" x="10" y="124" source="@Embed('../assets/yah.png')" click="image4_clickHandler(event)"/>-->
+	<s:Label id="lblZoom" x="4" y="38" text="100"/>
+</s:Group>

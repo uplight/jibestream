@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   width="180" height="800" backgroundColor="#EAE7E7" cornerRadius="5"
+				   dropShadowVisible="true" creationComplete="bordercontainer1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mediators.ComponentsViewMediator;
+			
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			
+			private var mediator:ComponentsViewMediator;
+			protected function bordercontainer1_creationCompleteHandler(event:FlexEvent):void{
+				this.mediator = new ComponentsViewMediator(this);
+			}
+			public function addView(DO:IVisualElement,removeall:Boolean= true){
+				if(removeall)this.removeAllElements();
+				this.addElement(DO);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+</s:BorderContainer>

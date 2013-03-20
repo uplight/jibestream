@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="46" creationComplete="group1_creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			import vos.VoMap;
+			
+			[Bindable] private var arlMaps:ArrayList
+					
+			
+			protected function loadProject_clickHandler(event:MouseEvent):void	{
+			
+				
+			}
+			
+			protected function cmbMaps_changeHandler(event:IndexChangeEvent):void{
+				Registry.getInstance.currentMap=arlMaps.getItemAt(event.newIndex) as VoMap;
+			}
+			
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void	{
+				var ldr:URLLoader = new URLLoader(new URLRequest("data/maps/maps.xml"));
+				ldr.addEventListener(Event.COMPLETE,ldrCOMPLETE);
+				var arl:ArrayList= new ArrayList()
+				arl.addItem({label:"Maps Manager",data:"MapsManager.swf"});
+				arl.addItem({label:"Locations Manager",data:"LocationsManager.swf"});
+				arl.addItem({label:"Map Editor",data:"MapEditor.swf"});
+				arl.addItem({label:"Locations Mapper",data:"LocationsMapper.swf"});
+				arl.addItem({label:"Legens Mapper",data:"LegendsMapper.swf"});
+				
+				btnsBar.dataProvider=arl;
+				
+			}
+			
+			protected function ldrCOMPLETE(event:Event):void{
+				var xml:XML = new XML(event.target.data);
+				var arl:ArrayList = new ArrayList
+				for each(var node:XML in xml.children()){
+					var vo:VoMap= new VoMap
+					vo.img=node.attribute('img');
+					vo.label=node.attribute('label');
+					vo.xml=node.attribute('url');
+					arl.addItem(vo);
+					
+				}
+				this.arlMaps=arl;
+				
+				
+			}
+						
+			
+			protected function cmbEditor_changeHandler(event:IndexChangeEvent):void	{
+				
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!--<s:Image x="0" y="0" width="100%" source="@Embed('../assets/Banner.jpg')"/>-->
+	<s:Rect height="100%" width="100%">
+		<s:fill>
+			<s:SolidColor color="0x222222"/>
+		</s:fill>
+	</s:Rect>
+	<s:Rect height="50%" width="100%">
+		<s:fill>
+			<s:SolidColor color="0xFFFFFF" alpha="0.2" />
+		</s:fill>
+	</s:Rect>
+	<s:HGroup horizontalCenter="0" verticalCenter="0">
+		<s:ButtonBar id="btnsBar"  />
+		<s:Group width="200" height="22">
+		</s:Group>
+		<s:DropDownList id="cmbMaps" change="cmbMaps_changeHandler(event)" dataProvider="{arlMaps}"></s:DropDownList>
+		<s:Button id="btnSave" label="Save"/>
+		<s:Button label="Help"/>
+	</s:HGroup>
+</s:Group>

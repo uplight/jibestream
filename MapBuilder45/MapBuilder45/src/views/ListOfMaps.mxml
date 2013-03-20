@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="160" height="162" creationComplete="group1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import mediators.ListOfMapsMediator;
+			
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			import vos.VoMap;
+			
+			public static const NAME:String="ListOfMaps"
+			
+			public static const NEWIMAGE:String=NAME+"NewImage";
+			[Bindable]private var arlMaps:ArrayList
+			
+			private var selectedIndex:int=-1;
+			
+			private var mediator:ListOfMapsMediator = new ListOfMapsMediator(this);
+			protected function group1_creationCompleteHandler(event:FlexEvent):void	{
+				// TODO Auto-generated method stub
+				
+			}
+			public function setData(arl:ArrayList):void{
+				
+				this.arlMaps=arl;
+			}
+			public function get selectedItem():VoMap{
+				return arlMaps.getItemAt(this.selectedIndex) as VoMap;
+			}
+				
+			protected function button1_clickHandler(event:MouseEvent):void	{
+				mediator.sendNotification(ListOfMapsMediator.NEWMAP,arlMaps);
+				
+			}
+			
+			protected function button2_clickHandler(event:MouseEvent):void	{
+				mediator.sendNotification(ListOfMapsMediator.DELETE,arlMaps.getItemAt(this.selectedIndex));
+				
+			}
+			
+			protected function list1_changeHandler(event:IndexChangeEvent):void	{
+				this.selectedIndex=event.newIndex;
+				mediator.sendNotification(ListOfMapsMediator.SELECTED,event.newIndex);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:Label x="0" width="160" height="20" backgroundColor="#595858" color="#FFFFFF"
+			 text="CurrentMap" textAlign="center" verticalAlign="middle" />
+	<s:List id="lstMaps" x="0" y="20" width="160" height="110" change="list1_changeHandler(event)" dataProvider="{arlMaps}"></s:List>
+	<s:Button x="3" y="138" label="IMPORT" click="button1_clickHandler(event)"/>
+	<s:Button x="86" y="138" label="DELETE" click="button2_clickHandler(event)"/>
+</s:Group>

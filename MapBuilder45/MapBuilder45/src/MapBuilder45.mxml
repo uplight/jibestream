@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:views="views.*"
+			   xmlns:comps="comps.*"  width="100%" height="100%" backgroundColor="#CCCCCC"   creationComplete="application1_creationCompleteHandler(event)" horizontalCenter="0">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			
+			import spark.components.Group;
+			import spark.events.IndexChangeEvent;
+			
+			import vos.VoMap;
+			//private var mediator:ApplicationMediator
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void{
+				
+				banner.cmbMaps.addEventListener(IndexChangeEvent.CHANGE,cmbCHANGE);
+				banner.btnsBar.addEventListener(IndexChangeEvent.CHANGE,onBtnsBarCHANGE);
+				banner.btnSave.addEventListener(MouseEvent.CLICK,onSaveButtonCLICK);
+				this.addEventListener(Event.ADDED_TO_STAGE,thisAddedToStage);
+				
+				this.loader.contentLoaderInfo.addEventListener(Event.COMPLETE,onLoaderComplete);
+				
+				
+				Registry.getInstance.connector.connect("rem/gateway.php");
+				
+			}
+			
+			protected function cmbCHANGE(event:IndexChangeEvent):void{
+				if(Registry.getInstance.hasChanges) this.saveAlert();
+				else{
+					Registry.getInstance.currentMap=banner.cmbMaps.selectedItem as VoMap
+					Registry.getInstance.dispatcherGlobal.dispatchEvent(new Event(Registry.GETNEWMAP));
+					
+				}
+				
+			}
+			public function onChangesAlert(str:String):void{
+				if(str=="Save on Server") Registry.getInstance.dispatcherGlobal.dispatchEvent(new Event(Registry.SAVECHANGESONSERVER));
+				else{
+					Registry.getInstance.hasChanges=false;
+					Registry.getInstance.dispatcherGlobal.dispatchEvent(new Event(Registry.GETNEWMAP));
+				}
+				
+			}
+			
+			private function saveAlert():void{
+				Alert.show("You want to Save Changes on server?",{buttons:["Save on Server","Not"],callback:onChangesAlert,colour:0xAAAAAA});
+			}
+			protected function onSaveButtonCLICK(event:MouseEvent):void	{
+				if(Registry.getInstance.hasChanges)	this.saveAlert();
+				else Alert.show("No Changes made",{colour:0xAAAAAA});
+			}
+			protected function onBtnsBarCHANGE(event:IndexChangeEvent):void	{
+				if(banner.btnsBar.selectedItem && banner.btnsBar.selectedItem.hasOwnProperty('data')) {
+					this.request.url=banner.btnsBar.selectedItem.data;
+					//var lc:LoaderContext = new LoaderContext
+					//lc.allowCodeImport=true;
+					//trace("container.loadModule: "+ banner.btnsBar.selectedItem.data);
+					container.unloadModule();
+					container.loadModule(banner.btnsBar.selectedItem.data);
+					//this.loader.load(this.request,lc);
+				}
+				
+			}
+			
+			protected function onError(event:IOErrorEvent):void	{
+				//trace("no module:  "+ loader.source);
+				
+			}
+			
+			
+			private var loader:Loader = new Loader();
+			private var request:URLRequest = new URLRequest();
+			
+			protected function onLoaderComplete(event:Event):void{
+				var li:LoaderInfo = event.target as LoaderInfo;
+				trace(li.content as Application);
+				
+			}
+			
+			protected function thisAddedToStage(event:Event):void{
+				Alert.init(stage);
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:ModuleLoader id="container" y="50" width="100%" />
+	<s:SWFLoader/>
+	<views:Banner id="banner" y="0" horizontalCenter="0">
+	</views:Banner>
+</s:Application>

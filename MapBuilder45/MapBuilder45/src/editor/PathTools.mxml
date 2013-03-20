@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:editor="editor.*"
+				   width="60" height="650" backgroundColor="#CCCCCC" cornerRadius="5"
+				   creationComplete="group1_creationCompleteHandler(event)" dropShadowVisible="true">
+	
+	
+	<fx:Script>
+		<![CDATA[
+			import editor.path.PathEditor;
+			
+			import flash.filters.GlowFilter;
+			
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			
+			import vos.VoDot;
+			private var glWhite:GlowFilter = new GlowFilter(0xFFFFFF,0.8,10.0,10.0,2,1,true,false);
+			protected var selectedDO:DisplayObject;
+			
+			public var mapholder:MapHolder;
+			
+			protected function image1_clickHandler(event:MouseEvent):void{
+								
+				var DO:DisplayObject= event.currentTarget as DisplayObject;
+				if(DO.filters.length>0){
+					if(this.selectedDO) this.selectedDO.filters=[];
+					Registry.getInstance.dispatcherGlobal.dispatchEvent(new Event(PathEditor.RESET));
+				}
+				else{
+					if(this.selectedDO) this.selectedDO.filters=[];
+					this.selectedDO=event.currentTarget as DisplayObject;
+					this.selectedDO.filters=[this.glWhite]
+					Registry.getInstance.dispatcherGlobal.dispatchEvent(new DataEvent(DataEvent.DATA,false,false,event.currentTarget.id));	
+					
+				}
+						
+			}
+				
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void	{
+				this.zoommove.addEventListener(DataEvent.DATA,onZoomMove);
+				
+			}
+			protected function onZoomMove(event:DataEvent):void{
+				//trace(NAME+" onZoomMove "+ event.data);
+				switch(event.data){
+					case "zoomp":
+						zoommove.myZoom(mapholder.zoomIn());
+						break;
+					case "zoomm":
+						zoommove.myZoom(mapholder.zoomOut());
+						break;
+					case "movet":
+						
+						if(mapholder.makeMovable()){
+							enableMenu(false)
+							zoommove.movet.filters=[this.glWhite];
+						}
+						else{
+							enableMenu(true)
+							zoommove.movet.filters=[];
+						}
+						break;
+				}
+				
+			}
+			
+			protected function enableMenu(bool:Boolean):void{
+				make.enabled=bool;
+				imgdelete.enabled=bool;
+				movedot.enabled=bool;
+				setguide.enabled=bool;
+				color_btn.enabled=bool;
+			}
+			private var intHint:int
+			
+			protected function iconOUT(event:MouseEvent):void{			
+				//stage.removeEventListener(MouseEvent.MOUSE_MOVE,sprtOUT);
+				clearTimeout(intHint);
+				if(this.contains(txtHint)) this.removeElement(txtHint);
+			}
+			
+			protected function iconOVER(event:MouseEvent):void{
+					intHint=setTimeout(showHint,2000,event.currentTarget.name);			
+			}
+			private function showHint(str:String):void{
+				//stage.addEventListener(MouseEvent.MOUSE_MOVE,sprtOUT);
+				trace("showHit :   "+str);
+				txtHint.y=this.mouseY-20;
+				txtHint.text=str;
+				//txtHint.autoSize=TextFieldAutoSize.LEFT
+				
+				//txtHint.y=posy;
+				this.addElement(txtHint);
+				//txtHint.width=txtHint.textWidth;
+				//txtHint.height=txtHint.textHeight;
+			}
+									
+			private function setMode(currentTarget:Object):void	{
+				if( this.selectedDO) this.selectedDO.filters=[];
+				this.selectedDO=currentTarget as DisplayObject;
+				this.selectedDO.filters=[this.glWhite]
+							
+			//	dispatchEvent(new DataEvent(DataEvent.DATA,false,false,currentTarget.id));		
+				
+			}
+			
+			public function reset():void{
+			if(this.selectedDO)this.selectedDO.filters=[]
+			this.selectedDO=null
+			}
+			
+			protected function polar_clickHandler(event:MouseEvent):void{
+				if(setguide.filters && setguide.filters.length>0){
+					setguide.filters=[];
+					Registry.getInstance.dispatcherGlobal.dispatchEvent(new DataEvent(DataEvent.DATA,false,false,"rempolar"));
+				}else{
+					setguide.filters=[this.glWhite];
+					Registry.getInstance.dispatcherGlobal.dispatchEvent(new DataEvent(DataEvent.DATA,false,false,"setpolar"));
+				}
+				
+			}
+			
+			protected function color_clickHandler(event:MouseEvent):void{
+				if(color_btn.filters.length>0){
+					color_btn.filters=[];
+					VoDot.color=0x000000;
+					
+				}else{
+					color_btn.filters=[this.glWhite];
+					VoDot.color=0x990000;
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:VGroup id="toolspalette" horizontalCenter="0" y="10">
+		<s:Image id="make"  name="Draw" source="@Embed('../assets/draw_btn.png')" click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>
+		<s:Image id="imgdelete"  name="Delete" source="@Embed('../assets/remove_btn.png')" click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>
+		<s:Image id="movedot" name="Move Dot" source="@Embed('../assets/movedot_btn.png')"  click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>
+		
+		<!--<s:Image id="cutline" name="Add Path" source="@Embed('../assets/add_btn.png')" click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>
+		<s:Image id="join_btn" source="@Embed('../assets/join_btn.png')" click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>-->
+		<s:Image id="color_btn" name="Red Path"  source="@Embed('../assets/color_btn.png')" click="color_clickHandler(event)" filters="[]"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>
+		<!--<s:Image id="style_btn" source="@Embed('../assets/style_btn.png')" click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>-->
+		<s:Image id="setguide" name="Polar" source="@Embed('../assets/setguide.png')" click="polar_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>
+		<s:Label id="lblAngle" text="000" verticalAlign="top"/>
+		<!--<s:Image id="setstep" source="@Embed('../assets/setstep.png')" click="image1_clickHandler(event)"  mouseOver="iconOVER(event)" mouseOut="iconOUT(event)"/>-->
+		<!--<s:Line   width="60" >
+			<stroke>
+				<SolidColorStroke color="#000000" weight="1"/>
+			</stroke>
+		</s:Line>-->
+		<editor:ZoomInMove id="zoommove" >
+		</editor:ZoomInMove>
+	</s:VGroup>
+	<s:Label id="txtHint" backgroundColor="0xFFFFFF" height="15" />
+	
+</s:BorderContainer>
