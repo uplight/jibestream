@@ -33,7 +33,7 @@
 				arl.addItem({label:"Locations Manager",data:"LocationsManager.swf"});
 				arl.addItem({label:"Map Editor",data:"MapEditor.swf"});
 				arl.addItem({label:"Locations Mapper",data:"LocationsMapper.swf"});
-				arl.addItem({label:"Legens Mapper",data:"LegendsMapper.swf"});
+				arl.addItem({label:"Legends Mapper",data:"LegendsMapper.swf"});
 				
 				btnsBar.dataProvider=arl;
 				

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+<s:Module xmlns:fx="http://ns.adobe.com/mxml/2009"
 		  xmlns:s="library://ns.adobe.com/flex/spark"
 		  xmlns:mx="library://ns.adobe.com/flex/mx"
 		  creationComplete="creationCompleteHandler(event)" width="100%" height="100%">
@@ -270,4 +270,4 @@
 		<s:Button  horizontalCenter="0" y="5" label="Record" click="btnRecord_clickHandler(event)"/>
 		<s:Label id="lblSelected" horizontalCenter="0" y="37" text="       "/>
 	</s:BorderContainer>
-</s:Application>
+</s:Module>
