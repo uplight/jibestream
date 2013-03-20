@@ -18,7 +18,11 @@ package
 	{
 		public static const GETNEWMAP:String="GetaNewMap";
 		public static const SAVECHANGESONSERVER:String="SaveChangesOnServer";
+		public static const OVER:String="Over";
+		
+		
 		static private const _instance:Registry = new Registry();
+		
 		
 		public function Registry()
 		{

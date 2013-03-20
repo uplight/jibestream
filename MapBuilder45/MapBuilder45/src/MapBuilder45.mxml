@@ -9,6 +9,11 @@
 			import mx.core.IVisualElement;
 			import mx.events.FlexEvent;
 			
+			
+			
+			
+			
+			
 			import spark.components.Group;
 			import spark.events.IndexChangeEvent;
 			
@@ -64,6 +69,9 @@
 					container.loadModule(banner.btnsBar.selectedItem.data);
 					//this.loader.load(this.request,lc);
 				}
+				
+				
+				
 				
 			}
 			
